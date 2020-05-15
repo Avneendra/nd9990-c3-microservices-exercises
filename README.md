@@ -15,19 +15,40 @@ The project is split into two parts:
 #### Steps to run project
 1. Install Travis plugin to github
 2. Build Images - 
-```docker-compose -f udagram-deploy/docker/docker-compose-build.yaml build --parallel```
-3. Verify Images - 
-```docker images```
-4. Run app and verify application works by opening http://localhost:8100 - 
-```cd udagram-deploy/docker/ && docker-compose up```
-5. Create Amazon EKS cluster:
-  ```eksctl create cluster \```
-  ```--name <cluster name> --region <region name> --nodegroup-name node-workers \```
-  ```--node-type t3.micro --nodes <number of node groups> --ssh-access --ssh-public-key <aws_key.pub> \```
-  ```--managed```
-6. Deploying application: 
 ```
-./deploy.sh
+docker-compose -f udagram-deploy/docker/docker-compose-build.yaml build --parallel
+```
+3. Verify Images - 
+```
+docker images
+```
+4. Run app and verify application works by opening http://localhost:8100 - 
+``` 
+cd udagram-deploy/docker/ && docker-compose up
+```
+5. Create Amazon EKS cluster:
+```
+eksctl create cluster \
+--name <cluster name> --region <region name> --nodegroup-name node-workers
+--node-type t3.micro --nodes <number of node groups> --ssh-access --ssh-public-key <aws_key.pub> \
+--managed
+```
+6. Deploy application: 
+```
+kubectl delete secret env-secret
+kubectl create -f udagram-deploy/k8s/env-secret.yaml
+kubectl delete secret aws-secret
+kubectl create -f udagram-deploy/k8s/aws-secret.yaml
+kubectl delete configmap env-config 
+kubectl create -f udagram-deploy/k8s/env-configmap.yaml
+kubectl apply -f udagram-deploy/k8s/backend-feed-deployment.yaml
+kubectl apply -f udagram-deploy/k8s/backend-feed-service.yaml
+kubectl apply -f udagram-deploy/k8s/backend-user-deployment.yaml
+kubectl apply -f udagram-deploy/k8s/backend-user-service.yaml
+kubectl apply -f udagram-deploy/k8s/reverseproxy-deployment.yaml
+kubectl apply -f udagram-deploy/k8s/reverseproxy-service.yaml
+kubectl apply -f udagram-deploy/k8s/frontend-deployment.yaml
+kubectl apply -f udagram-deploy/k8s/frontend-service.yaml
 ```
 7. Setup port forwarding :
 ```
